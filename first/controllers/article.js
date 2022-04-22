@@ -1,18 +1,26 @@
 const { BadRequestError, NotFoundError } = require("../errors");
 const Article = require("../models/Article");
 const User = require("../models/User");
+//file system module helps us store, access, and manage data on our operating system
 const fs = require("fs");
+//Il est utilisé pour analyser les données de formulaire, principalement les téléchargements de fichiers.
 const cloudinary = require("cloudinary").v2;
 const { StatusCodes } = require("http-status-codes");
 
 
+//creation d'un article
 const createArticles = async (req, res) => {
+   //apres l'entrée de la description et le prix de l'article
     const { caption ,prix} = req.body;
+    //apres l'upload de l'image
     const image = req.files?.image;
+    //handling exception because this three line are required
     if (!caption && !image && !prix) {
        throw new BadRequestError("Expected a caption or image");
     }
+    //trouver le respo sur l'article
     const user = await User.findById(req.user.id);
+    //uploading image 
     if (image) {
        const result = await cloudinary.uploader.upload(image.tempFilePath, {
           use_filename: true,
@@ -20,6 +28,7 @@ const createArticles = async (req, res) => {
        });
        fs.unlinkSync(image.tempFilePath);
        const { secure_url: src, public_id } = result;
+       //creation de l'article
        const article = await Article.create({
           caption,
           prix,
@@ -38,9 +47,10 @@ const createArticles = async (req, res) => {
        res.status(StatusCodes.CREATED).json({ article });
     }
  };
-
+//trouver un article
  const getArticles = async (req, res) => {
    const { by, search } = req.query;
+   //searching by the creater
    if (by) {
       let articles = await Article.find({ createdBy: by }).sort("-createdAt");
       res.status(StatusCodes.OK).json({ articles });
@@ -54,6 +64,7 @@ const createArticles = async (req, res) => {
    }
 };
 
+//non trouvable
 const getArticle = async (req, res) => {
    const { id } = req.params;
    const articles = await Article.findById(id);
@@ -61,15 +72,18 @@ const getArticle = async (req, res) => {
    res.status(StatusCodes.OK).json({ articles });
 };
  
+//aimer un article
  const likeArticle = async (req, res) => {
     const { add } = req.query;
     if (add === "true") {
        const articles = await Article.findById(req.body.id);
+       //non trouvable
        if (!articles) throw new NotFoundError(`No article with id${req.body.id}`);
- 
+         //operation deja faite
        if (articles.likes.includes(req.user.id)) {
           throw new BadRequestError("Already liked");
        } else {
+          //
           const articles = await Article.findByIdAndUpdate(
              req.body.id,
              {
@@ -94,6 +108,7 @@ const getArticle = async (req, res) => {
     }
  };
  
+ //signaler un article
  const reportArticle = async (req, res) => {
    const { add } = req.query;
    if (add === "true") {
