@@ -1,0 +1,21 @@
+.hi{
+    position: absolute;
+    right: 112px;
+}
+h1{
+    position: absolute;
+    left: 500px;
+    color: brown;
+
+}
+.report{
+    position: absolute;
+    left: 930px;
+}
+.title{
+    position: relative;
+    text-align: center;
+}
+button{
+    all: unset;
+}
