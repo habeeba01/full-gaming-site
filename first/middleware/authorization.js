@@ -6,6 +6,7 @@ const authorize = (req, res, next) => {
    if (!authHeader || !authHeader.startsWith("Bearer")) {
       throw new AuthenticationError("Authentication Invalid");
    }
+   //The split() function is a string function of Node. js which is used to split string into sub-strings
    const token = authHeader.split(" ")[1];
 
    try {

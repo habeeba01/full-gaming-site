@@ -66,12 +66,12 @@ const UserSchema = new mongoose.Schema(
    },
    { timestamps: true }
 );
-
+//hash password
 UserSchema.pre("save", async function () {
    const salt = await bcrypt.genSalt();
    this.password = await bcrypt.hash(this.password, salt);
 });
-
+//generate a token
 UserSchema.methods.createJWT = function () {
    return jwt.sign(
       { id: this._id, name: this.name, profileImage: this.profileImage,isAdmin:this.isAdmin  },
@@ -81,7 +81,7 @@ UserSchema.methods.createJWT = function () {
       }
    );
 };
-
+//confirm password
 UserSchema.methods.comparePassword = async function (pw) {
    const isCorrect = await bcrypt.compare(pw, this.password);
    return isCorrect;

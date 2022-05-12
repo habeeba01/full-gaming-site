@@ -7,13 +7,14 @@ const express = require("express");
 const cloudinary = require("cloudinary").v2;
 const mongoose = require('mongoose')
 //security dependencies
-
+//Casque. js est un nœud utile. js qui vous aide à sécuriser les en-têtes HTTP renvoyés par vos applications Express. Les en-têtes HTTP sont une partie importante du protocole HTTP, mais sont généralement transparents du point de vue de l'utilisateur final.
 const helmet = require("helmet");
+//Cross-Origin Resource Sharing (CORS) est un mécanisme basé sur un en-tête HTTP qui permet à un serveur d'indiquer toute origine (domaine, schéma ou port) autre que la sienne à partir de laquelle un navigateur doit autoriser le chargement des ressources.
 const cors = require("cors");
+//Le cross-site scripting (XSS) est une attaque par injection de code sur les applications Web. Les attaquants utilisent des sites Web vulnérables pour injecter du code malveillant ou un script. Le XSS permet à l'attaquant d'injecter le code malveillant à l'aide de langages de script tels que JavaScript. Le code malveillant est exécuté sur le navigateur de l'utilisateur.
 const xss = require("xss-clean");
 
 //app initialisation
-
 const app = express();
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
@@ -54,15 +55,14 @@ app.use(helmet());
 app.use(express.json());
 app.use(fileUpload({ useTempFiles: true }));
 app.use(cors());
-
+//test
 app.get("/", (req, res) => {
    res.status(200).json({ msg: "welcome" });
 });
 
 // socket io
-
 const { addUser, getUserID, getSocketID, removeUser } = require("./socket/users");
-
+//socket connection
 io.on("connection", socket => {
    socket.on("add user", id => {
       io.emit("usersOnline", addUser(id, socket.id));
@@ -84,12 +84,11 @@ app.use("/api/v1/post", authorizationMiddleware, postRouter);
 app.use("/api/v1/article", authorizationMiddleware, articleRouter);
 app.use("/api/v1/chat", authorizationMiddleware, chatRouter);
 app.use("/api/v1/message", authorizationMiddleware, messageRouter);
-
 app.use(errorHandlerMiddleware);
 app.use(notFoundMiddleware);
-mongoose.set('bufferCommands', false);
 
 
+//connection to database&starting server
 const start = async () => {
    try { mongoose.connect(
     'mongodb+srv://user:1312@cluster0.pxu2h.mongodb.net/gamers?retryWrites=true&w=majority',

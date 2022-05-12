@@ -1,7 +1,6 @@
 let mongoose = require('mongoose');
 let express = require('express');
 let router = express.Router();
-
 let Posts = require('../models/Post')
 let Articles = require('../models/Article')
 
@@ -15,8 +14,6 @@ router.route('/').get((req, res, next) => {
       }
     })
 })
-
-
 //rechercher un post et le supprimer
 router.route('/delete/:id').delete((req, res, next) => {
   Posts.findByIdAndRemove(req.params.id, (error, data) => {

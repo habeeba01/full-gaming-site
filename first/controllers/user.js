@@ -5,17 +5,19 @@ const { StatusCodes } = require("http-status-codes");
 const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 
+//get a user by id
 const getUser = async (req, res) => {
     const { id } = req.params;
+    //searching
     const user = await User.findOne({ _id: id }).select({ password: 0 });
-
+//introuvable
     if (!user) {
         throw new NotFoundError(`No user exist with id ${id}`);
     }
 
     res.status(StatusCodes.OK).json({ user });
 };
-
+//get all users
 const getUsers = async (req, res) => {
     const { search } = req.query;
     if (search) {
@@ -27,14 +29,14 @@ const getUsers = async (req, res) => {
         res.status(StatusCodes.OK).json({ user });
     }
 };
-
+//
 const getUsersByIDs = async (req, res) => {
     const ids = Object.values(req.query);
     if (!ids) throw new BadRequestError("Expected atleast one id");
     const user = await User.find({ _id: { $in: ids } }).select({ password: 0 });
     res.status(StatusCodes.OK).json({ user });
 };
-
+//modifier
 const updateUser = async (req, res) => {
     const { id } = req.user;
     const user = await User.findByIdAndUpdate(id, req.body, {
@@ -54,7 +56,7 @@ const updateUser = async (req, res) => {
     res.status(StatusCodes.OK).json({ user, token, posts });
 };
 
-
+//report user
 const reportUser = async (req, res) => {
   const { add } = req.query;
   if (add === "true") {
@@ -88,18 +90,21 @@ const reportUser = async (req, res) => {
   }
 };
 
+//modifier la pdp
 const updateDP = async (req, res) => {
     const image = req.files?.image;
+    //fzut choisir une image
     if (!image) {
         throw new BadRequestError("Expected an image");
     }
+    //upload new img
     const result = await cloudinary.uploader.upload(image.tempFilePath, {
         use_filename: true,
         folder: "fb-clone-dps",
     });
     fs.unlinkSync(image.tempFilePath);
     const { secure_url: src } = result;
-
+//trouver le user puis la modifier
     const user = await User.findByIdAndUpdate(req.user.id, { profileImage: src }, { new: true, runValidators: true }).select({ password: 0 });
 
     await Post.updateMany({ createdBy: req.user.id }, { userDetails: { name: user.name, image: user.profileImage } });
@@ -111,11 +116,14 @@ const updateDP = async (req, res) => {
     res.status(StatusCodes.OK).json({ user, posts });
 };
 
-//get friends
+//get friendslist
 const getFriends =  async (req, res) => {
     try {
+      //searching
       const user = await User.findById(req.params.userId);
+      //Une promesse dans Node signifie une action qui sera soit terminée, soit rejetée. En cas d'achèvement, la promesse est tenue et sinon, la promesse est rompue. Donc, comme le mot l'indique, soit la promesse est tenue, soit elle est rompue. Et contrairement aux rappels, les promesses peuvent être enchaînées.
       const friends = await Promise.all(
+   //Map is a collection of elements where each element is stored as a Key, value pair.
         user.followings.map((friendId) => {
           return User.findById(friendId);
         })
@@ -154,7 +162,6 @@ const getFriends =  async (req, res) => {
   };
   
   //unfollow a user
-  
   const unfollow =  async (req, res) => {
     if (req.body.userId !== req.params.id) {
       try {

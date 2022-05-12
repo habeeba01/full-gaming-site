@@ -22,10 +22,12 @@ const createArticles = async (req, res) => {
     const user = await User.findById(req.user.id);
     //uploading image 
     if (image) {
+       //telecharger l'image
        const result = await cloudinary.uploader.upload(image.tempFilePath, {
           use_filename: true,
           folder: "fb-clone-posts",
        });
+       //The fs. unlinkSync() method is used to synchronously remove a file or symbolic link from the filesystem.
        fs.unlinkSync(image.tempFilePath);
        const { secure_url: src, public_id } = result;
        //creation de l'article
@@ -37,53 +39,54 @@ const createArticles = async (req, res) => {
           userDetails: { name: user.name, image: user.profileImage },
        });
        res.status(StatusCodes.CREATED).json({ article });
-    } else {
-       const article = await Article.create({
-          caption,
-            prix,
-          createdBy: user._id,
-          userDetails: { name: user.name, image: user.profileImage },
-       });
-       res.status(StatusCodes.CREATED).json({ article });
-    }
+    } 
  };
-//trouver un article
+//trouver tous les articles
  const getArticles = async (req, res) => {
    const { by, search } = req.query;
-   //searching by the creater
+   //searching by the creator
    if (by) {
       let articles = await Article.find({ createdBy: by }).sort("-createdAt");
       res.status(StatusCodes.OK).json({ articles });
+      //search by caption
    } else if (search) {
+      //Il s'agit d'une chaîne de texte décrivant un modèle pouvant être utilisé pour la recherche.
       const regex = new RegExp(search, "i");
       const articles = await Article.find({ caption: regex }).sort("-createdAt");
       res.status(StatusCodes.OK).json({ articles });
+      //by id
    } else {
       const articles = await Article.find().sort("-createdAt");
       res.status(StatusCodes.OK).json({ articles });
    }
 };
 
-//non trouvable
+//trouver un article by id
 const getArticle = async (req, res) => {
    const { id } = req.params;
+  // L'opérateur await est utilisé pour attendre une Promise . Il ne peut être utilisé qu'à l'intérieur d'une fonction asynchrone dans du code JavaScript normal ;
    const articles = await Article.findById(id);
+   //introuvable
    if (!articles) throw new NotFoundError(`No article with id${id}`);
+   //else
    res.status(StatusCodes.OK).json({ articles });
 };
  
 //aimer un article
+//La fonction async permet d'écrire du code basé sur des promesses de manière asynchrone via la boucle d'événements.
  const likeArticle = async (req, res) => {
     const { add } = req.query;
     if (add === "true") {
+       //find articke by id
        const articles = await Article.findById(req.body.id);
        //non trouvable
        if (!articles) throw new NotFoundError(`No article with id${req.body.id}`);
          //operation deja faite
+         //The includes() method checks if a specified value is included in the buffer. Returns true if the values is included, otherwise false.
        if (articles.likes.includes(req.user.id)) {
           throw new BadRequestError("Already liked");
        } else {
-          //
+          //aimer l'article
           const articles = await Article.findByIdAndUpdate(
              req.body.id,
              {
@@ -93,7 +96,8 @@ const getArticle = async (req, res) => {
           );
           res.status(StatusCodes.OK).json({ articles });
        }
-    } else if (add === "false") {
+    } //dislike
+    else if (add === "false") {
        const articles = await Article.findByIdAndUpdate(
           req.body.id,
           {
@@ -101,9 +105,12 @@ const getArticle = async (req, res) => {
           },
           { new: true, runValidators: true }
        );
+       //introuvable
        if (!articles) throw new NotFoundError(`No article with id${req.body.id}`);
        res.status(StatusCodes.OK).json({ articles });
-    } else {
+    } 
+    //mauvaise requete
+    else {
        throw new BadRequestError("Invalid url");
     }
  };
@@ -127,10 +134,13 @@ const getArticle = async (req, res) => {
          );
          res.status(StatusCodes.OK).json({ articles });
       }
-   } else if (add === "false") {
+   } 
+   //remove the report
+   else if (add === "false") {
       const articles = await Article.findByIdAndUpdate(
          req.body.id,
          {
+            //The pull() method is used to remove an element from collection by given key and return the pulled element
             $pull: { report: req.user.id },
          },
          { new: true, runValidators: true }
@@ -141,21 +151,22 @@ const getArticle = async (req, res) => {
       throw new BadRequestError("Invalid url");
    }
 };
-
+//commenter un article
  const commentArticle = async (req, res) => {
     const articles = await Article.findByIdAndUpdate(
        req.body.id,
        {
+          //push() is an array function from Node. js that is used to add element to the end of an array.
           $push: { comments: { commentedBy: req.user.id, comment: req.body.comment } },
        },
        { new: true, runValidators: true }
     );
- 
+ //not found
     if (!articles) throw new NotFoundError(`No article with id${req.body.id}`);
  
     res.status(StatusCodes.OK).json({ articles });
  };
- 
+ //supprimer un article
  const deleteArticle = async (req, res) => {
     const { id } = req.params;
     const article = await Article.findOneAndDelete({ _id: id, createdBy: req.user.id });

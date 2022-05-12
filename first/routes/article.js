@@ -3,8 +3,7 @@ const {
    createArticles,
    getArticles,
    likeArticle,
-   reportArticle
-   ,
+   reportArticle,
    commentArticle,
    getArticle,
    deleteArticle,

@@ -1,6 +1,7 @@
 const Message = require("../models/Message");
 const { StatusCodes } = require("http-status-codes");
 
+//creer un message=chat+text
 const createMessage = async (req, res) => {
    const { text } = req.body;
    const { chatID } = req.params;
@@ -11,7 +12,7 @@ const createMessage = async (req, res) => {
    });
    res.status(StatusCodes.CREATED).json({ message });
 };
-
+//display msg 
 const getMessage = async (req, res) => {
    const { chatID } = req.params;
    const message = await Message.find({ chatID });
